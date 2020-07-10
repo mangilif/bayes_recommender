@@ -138,7 +138,7 @@ for i in range(nusers):
     method = 'similarity'
     distance =  pd.Series(0, index = item_features.index)        
     prior = np.array([1.0/n_items]*n_items)  # P(I)
-    dfsim = pd.DataFrame(columns=cols+['correct'])
+    dfsim = pd.DataFrame(columns=cols)
     dfsim.loc[0] = np.append(prior, [-1, -1,-1])
     AB = 1
     A2 = 1
@@ -162,7 +162,7 @@ for i in range(nusers):
         prior = similarity
     	
     	# Add information to the df
-        dfsim.loc[len(dfsim)] = np.append(prior, [q, answers[q], items[trueI]])
+        dfsim.loc[len(dfsim)] = np.append(prior, [q, answers[q]])
     rtable[method][i] = dfsim.drop(columns = ['question', 'answer']).rank(axis=1,ascending=False)[col]
     ptable[method][i] = dfsim[col]
 
