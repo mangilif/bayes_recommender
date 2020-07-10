@@ -1,6 +1,6 @@
 Data derived from MovieLens database [1] processed as described in [2].
 
-\n
+ 
 
 [1] Harper, F.M., Konstan, J.A.: The Movielens datasets: history and context. Acm
 transactions on interactive intelligent systems (tiis) 5(4), 1–19 (2015)
