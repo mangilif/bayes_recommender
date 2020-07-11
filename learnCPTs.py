@@ -20,7 +20,7 @@ datapath = path + '/data/'
 # 10:= artificial dataset with noise level at 10%
 # 50:= artificial dataset with noise level at 50%
 # 'real':= dataser built using real tags (not shown in the paper)
-noise = 'real' 
+noise = 50
 if noise == 'real':
     name = 'user_features_real' 
     outfilename = 'allcpts_real_small.pkl'
@@ -28,18 +28,14 @@ else:
     name = 'user_features_noise_at_%d_percent'%noise
     outfilename = 'allcpts%d_small.pkl'%noise
 #%% Reduce dataset
-tags = pd.read_pickle(datapath+'small_dataset_tags.pkl')
 movies = pd.read_pickle(datapath+'small_dataset_movies.pkl')
 
-user_features = pd.read_pickle(datapath+name+'.pkl')
-user_features_test_small = user_features.loc[[m for m in movies if m in user_features.index],['tag_'+str(t) for t in tags if 'tag_'+str(t) in user_features.columns]+['genre','period']]
-user_features_train_small = user_features.loc[~user_features.index.isin(movies),['tag_'+str(t) for t in tags if 'tag_'+str(t) in user_features.columns]+['genre','period']]
-user_features_test_small.to_pickle(datapath+name+'_small_test.pkl')
+user_features_test_small = pd.read_pickle(datapath+name+'_test.pkl')
+user_features_train_small = pd.read_pickle(datapath+name+'_train.pkl')
 
 item_features = pd.read_pickle(datapath+'item_features.pkl')
-item_features_small = item_features.loc[movies,[t for t in user_features_test_small.columns]]
+item_features_small = item_features.loc[movies,:]
 item_features_small.to_pickle(datapath+'item_features_small.pkl')
-# item_features_small.to_pickle(datapath+'item_features_small.pkl')
 
 #%%
 item_features = item_features
@@ -66,10 +62,8 @@ f = open(datapath+'pCgivenIdict.pkl',"wb")
 pickle.dump(pCgivenIdict,f)
 f.close()
 
-
-
 pCgivenIdict_small = dict()
-for f in ['tag_'+str(t) for t in tags]+['genre','period']:
+for f in user_features.columns:
     pCgivenIdict_small[f] = pCgivenIdict[f].loc[movies,:].values
 
 s = 1
