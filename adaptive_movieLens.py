@@ -3,12 +3,14 @@ import pandas as pd
 import pickle
 import random as rn
 import time
-
+import matplotlib.pyplot as plt
 
 
 def updating(prior, tables, q, a):
     likelihood = tables[q][:, a]
     joint = likelihood*prior
+    if ( sum(joint)==0):
+        joint = prior
     posterior = joint / sum(joint)
     return posterior
 	
@@ -47,11 +49,22 @@ def pick_question(prior, tables, askable_questions):
 # Select dataset 
 # 10:= artificial dataset with noise level at 10%
 # 50:= artificial dataset with noise level at 50%
+# 'real':= dataser built using real tags (not shown in the paper)
 noise = 10
+# Set cpts = 'logic' to obtain the results for the Bayesian adaptive approach based on structural judgements
+# Set cpts = '' to use cpts learned from data
+cpts=''
 
-resultspath = '/results/noise%d/'%noise
-user_features = pd.read_pickle('data/user_features_noise_at_'+str(noise)+'_percent_small_test.pkl')
-pQgivenIdict = pickle.load( open('data/allcpts'+str(noise)+'_small.pkl', "rb" ) )
+if noise=='real':
+    resultspath = 'results/real/'
+    user_features = pd.read_pickle('data/user_features_real_small_test.pkl')
+    pQgivenIdict = pickle.load( open( 'data/allcpts_real_small.pkl', "rb" ) )
+else:    
+    resultspath = '/results/noise%d/'%noise
+    user_features = pd.read_pickle('data/user_features_noise_at_'+str(noise)+'_percent_small_test.pkl')
+    pQgivenIdict = pickle.load( open('data/allcpts'+str(noise)+'_small.pkl', "rb" ) )
+if cpts=='logic':
+    pQgivenIdict = pickle.load( open( 'data/pCgivenIdict_small.pkl', "rb" ) )
 
 item_features = pd.read_pickle('data/item_features_small.pkl')
 n_items = pQgivenIdict['genre'].shape[0]                                  # Number of items in the catalogue
@@ -111,34 +124,36 @@ for i in range(nusers):
     df = pd.DataFrame(columns=cols+['entropy'])
     df.loc[0] = np.append(prior, [-1, -1, entropy(prior.copy())])
     # All the questions can be initially asked
-    askable_questions = [_ for _ in range(200)]#range(n_questions)]
+    askable_questions = [_ for _ in range(n_questions)]
    
-    q = 0
     start0 = time.time()
     while(len(askable_questions)>0):
      	# Pick the most informative question and remove from the candidates list
      	question_asked =  pick_question(prior, tables, askable_questions)
      	askable_questions.remove(question_asked)
-     	if np.isnan(answers[question_asked]): continue
+     	if np.isnan(answers[question_asked]): print(question_asked); continue
      	# Update prior (to the posterior)
+     	prio0 = prior
      	prior = updating(prior, tables, question_asked, answers[question_asked])
-    	
+     	prior
      	# Add information to the df
      	df.loc[len(df)] = np.append(prior, [question_asked, answers[question_asked], entropy(prior.copy())])
-     	q+=1
     end = time.time()    
    
     rtable[method][i] = df.drop(columns = ['question', 'answer', 'entropy']).rank(axis=1,ascending=False)[col]
     ptable[method][i] = df[col]
+
     print('Final rank BN: ', rtable[method][i].iloc[-1] )
     print('Final probability BN: ', ptable[method][i].iloc[-1])
 
+    if cpts=='logic':
+       continue 
 #############################################33
 # Similarity 
     method = 'similarity'
     distance =  pd.Series(0, index = item_features.index)        
     prior = np.array([1.0/n_items]*n_items)  # P(I)
-    dfsim = pd.DataFrame(columns=cols)
+    dfsim = pd.DataFrame(columns=cols+['correct'])
     dfsim.loc[0] = np.append(prior, [-1, -1,-1])
     AB = 1
     A2 = 1
@@ -162,14 +177,15 @@ for i in range(nusers):
         prior = similarity
     	
     	# Add information to the df
-        dfsim.loc[len(dfsim)] = np.append(prior, [q, answers[q]])
-    rtable[method][i] = dfsim.drop(columns = ['question', 'answer']).rank(axis=1,ascending=False)[col]
+        dfsim.loc[len(dfsim)] = np.append(prior, [q, answers[q], items[trueI]])
+    rtable[method][i] = dfsim.drop(columns = ['question', 'answer', 'correct']).rank(axis=1,ascending=False)[col]
     ptable[method][i] = dfsim[col]
-
+ 
     print('Final rank similarity: ',  rtable[method][i].iloc[-1])
     print('Final similarity: ',  ptable[method][i].iloc[-1])
     print('Time adaptive: ', end - start0)	  
-
+    
+    
 ################################################################################
 
 # Random
@@ -179,8 +195,7 @@ for i in range(nusers):
     df = pd.DataFrame(columns=cols+['entropy'])
     df.loc[0] = np.append(prior, [-1, -1, entropy(prior.copy())])
     # All the questions can be initially asked
-    askable_questions = [_ for _ in range(200)]#range(n_questions)]
-    q = 0
+    askable_questions = [_ for _ in range(n_questions)]
     start0 = time.time()
     while(len(askable_questions)>0):
 #    	start = time.time()
@@ -193,14 +208,12 @@ for i in range(nusers):
     	
      	# Add information to the df
      	df.loc[len(df)] = np.append(prior, [question_asked, answers[question_asked], entropy(prior.copy())])
-     	q+=1
     end = time.time()    
     print('Time random: ', end - start0)	
     
     rtable[method][i] = df.drop(columns = ['question', 'answer', 'entropy']).rank(axis=1,ascending=False)[col]
     ptable[method][i] = df[col]  
   
-    
 #############################################33
 # Similarity random
    
@@ -236,10 +249,10 @@ for i in range(nusers):
     ptable[method][i] = dfsimrnd[col] 
         
 
-f = open('results/ranks%s_small.pkl'%str(noise),"wb")
+f = open('results/ranks%s%s.pkl'%(str(noise),cpts),"wb")
 pickle.dump(rtable,f)
 f.close()
-f = open('results/probabilities%s_small.pkl'%str(noise),"wb")
+f = open('results/probabilities%s%s.pkl'%(str(noise),cpts),"wb")
 pickle.dump(ptable,f)
 f.close()
 
@@ -252,6 +265,6 @@ for m in methods:
 probabilities[['random', 'adaptive']].plot()
 ranks.loc[1:,].plot()
 ranks.loc[150:,].plot()
-probabilities.to_csv('results/probabilities%s.csv'%str(noise))
-ranks.to_csv('results/ranks%s.csv'%str(noise))
+probabilities.to_csv('results/probabilities%s%s.csv'%(str(noise),cpts))
+ranks.to_csv('results/ranks%s%s.csv'%(str(noise),cpts))
 
