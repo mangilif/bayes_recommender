@@ -1,1 +1,1 @@
-Results are saved here
+Figures that should be produced by the code
