@@ -49,10 +49,10 @@ def pick_question(prior, tables, askable_questions):
 # 10:= artificial dataset with noise level at 10%
 # 50:= artificial dataset with noise level at 50%
 # 'real':= dataser built using real tags (not shown in the paper)
-noise = 'real'
+noise = 10
 # Set cpts = 'logic' to obtain the results for the Bayesian adaptive approach based on structural judgements
 # Set cpts = '' to use cpts learned from data
-cpts=''
+cpts='logic'
 
 if noise=='real':
     resultspath = 'results/real/'

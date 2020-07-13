@@ -20,7 +20,7 @@ datapath = path + '/data/'
 # 10:= artificial dataset with noise level at 10%
 # 50:= artificial dataset with noise level at 50%
 # 'real':= dataser built using real tags (not shown in the paper)
-noise = 50
+noise = 10
 if noise == 'real':
     name = 'user_features_real' 
     outfilename = 'allcpts_real_small.pkl'
@@ -58,13 +58,13 @@ for q in item_features.columns:
     else:
         print('problem with ',q )
     
-f = open(datapath+'pCgivenIdict.pkl',"wb")
-pickle.dump(pCgivenIdict,f)
-f.close()
-
 pCgivenIdict_small = dict()
 for f in user_features.columns:
     pCgivenIdict_small[f] = pCgivenIdict[f].loc[movies,:].values
+
+f = open(datapath+'pCgivenIdict_small.pkl',"wb")
+pickle.dump(pCgivenIdict_small,f)
+f.close()
 
 s = 1
 
