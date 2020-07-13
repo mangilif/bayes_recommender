@@ -52,7 +52,7 @@ def pick_question(prior, tables, askable_questions):
 noise = 10
 # Set cpts = 'logic' to obtain the results for the Bayesian adaptive approach based on structural judgements
 # Set cpts = '' to use cpts learned from data
-cpts='logic'
+cpts=''
 
 if noise=='real':
     resultspath = 'results/real/'
