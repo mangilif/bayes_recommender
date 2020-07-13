@@ -3,7 +3,6 @@ import pandas as pd
 import pickle
 import random as rn
 import time
-import matplotlib.pyplot as plt
 
 
 def updating(prior, tables, q, a):
@@ -50,18 +49,18 @@ def pick_question(prior, tables, askable_questions):
 # 10:= artificial dataset with noise level at 10%
 # 50:= artificial dataset with noise level at 50%
 # 'real':= dataser built using real tags (not shown in the paper)
-noise = 10
+noise = 'real'
 # Set cpts = 'logic' to obtain the results for the Bayesian adaptive approach based on structural judgements
 # Set cpts = '' to use cpts learned from data
 cpts=''
 
 if noise=='real':
     resultspath = 'results/real/'
-    user_features = pd.read_pickle('data/user_features_real_small_test.pkl')
+    user_features = pd.read_pickle('data/user_features_real_test.pkl')
     pQgivenIdict = pickle.load( open( 'data/allcpts_real_small.pkl', "rb" ) )
 else:    
     resultspath = '/results/noise%d/'%noise
-    user_features = pd.read_pickle('data/user_features_noise_at_'+str(noise)+'_percent_small_test.pkl')
+    user_features = pd.read_pickle('data/user_features_noise_at_'+str(noise)+'_percent_test.pkl')
     pQgivenIdict = pickle.load( open('data/allcpts'+str(noise)+'_small.pkl', "rb" ) )
 if cpts=='logic':
     pQgivenIdict = pickle.load( open( 'data/pCgivenIdict_small.pkl', "rb" ) )
